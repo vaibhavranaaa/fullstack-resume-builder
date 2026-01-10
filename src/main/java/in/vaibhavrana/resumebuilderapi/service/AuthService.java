@@ -2,11 +2,14 @@ package in.vaibhavrana.resumebuilderapi.service;
 
 import in.vaibhavrana.resumebuilderapi.document.User;
 import in.vaibhavrana.resumebuilderapi.dto.AuthResponse;
+import in.vaibhavrana.resumebuilderapi.dto.LoginRequest;
 import in.vaibhavrana.resumebuilderapi.dto.RegisterRequest;
 import in.vaibhavrana.resumebuilderapi.exception.ResourceExistsException;
 import in.vaibhavrana.resumebuilderapi.repository.UserRespository;
+import in.vaibhavrana.resumebuilderapi.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -20,6 +23,9 @@ public class AuthService {
 
     private final UserRespository userRespository;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
     @Value("${app.base.url:http://localhost:8080}")
     private String appBaseUrl;
 
@@ -87,7 +93,7 @@ public class AuthService {
         return User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .profileImageUrl(request.getImageUrl())
                 .subscriptionPlan("Basic")
                 .verificationToken(UUID.randomUUID().toString())
@@ -109,5 +115,56 @@ public class AuthService {
         user.setVerificationExpires(null);
         userRespository.save(user);
 
+    }
+    public AuthResponse login(LoginRequest request) {
+
+        User user = userRespository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (!user.isEmailVerified()) {
+            throw new RuntimeException("Please verify your email before logging in");
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+        if (!user.isEmailVerified()){
+            throw new RuntimeException("Please verify your email before logging in");
+        }
+
+        String token = jwtUtil.generateToken(user.getId());
+
+        AuthResponse response = toResponse(user);
+        response.setToken(token);
+
+        return response;
+    }
+
+    public void resendVerification(String email) {
+        //Step 1:Fetch the user account by email
+        User user=userRespository.findByEmail(email)
+                .orElseThrow(()-> new RuntimeException("User not found"));
+
+        //Step2: Check the email is verified
+        if(user.isEmailVerified()){
+            throw new RuntimeException("Email is already verified.");
+
+        }
+
+        //Step3:Set the new verification token and expires time
+        user.setVerificationToken(UUID.randomUUID().toString());
+        user.setVerificationExpires(LocalDateTime.now().plusHours(24));
+
+
+        //Step4: Update the user
+        userRespository.save(user);
+
+        //Step5: Resend the verification email
+        sendVerificationEmail(user);
+    }
+
+    public AuthResponse getProfile(Object principalObject) {
+        User existingUser=(User)principalObject;
+        return toResponse(existingUser);
     }
 }

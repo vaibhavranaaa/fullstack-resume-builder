@@ -1,5 +1,6 @@
 package in.vaibhavrana.resumebuilderapi.service;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -34,4 +35,9 @@ public class EmailService {
 
         mailSender.send(message);
     }
+    @PostConstruct
+    public void debugMail() {
+        log.info("Mail from: {}", fromEmail);
+    }
+
 }
