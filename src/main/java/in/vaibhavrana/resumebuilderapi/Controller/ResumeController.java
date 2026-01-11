@@ -4,7 +4,6 @@ import in.vaibhavrana.resumebuilderapi.document.Resume;
 import in.vaibhavrana.resumebuilderapi.dto.CreateResumeRequest;
 import in.vaibhavrana.resumebuilderapi.service.FileUploadService;
 import in.vaibhavrana.resumebuilderapi.service.ResumeService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

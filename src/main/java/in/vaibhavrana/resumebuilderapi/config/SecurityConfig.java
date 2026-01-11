@@ -43,17 +43,18 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
-                                "/api/auth/verify-email",
-                                "/api/auth/upload-image",
-                                "/api/auth/resend-verification",
-                                "/actuator/**"
+                                "/api/auth/verify",
+                                "/api/auth/resend-verify",
+                                "/api/auth/upload-image"
                         ).permitAll()
+                        .requestMatchers("/api/auth/profile").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

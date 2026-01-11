@@ -12,5 +12,6 @@ public class AppConstants {
     public static final String RESUME="/api/resumes";
     public static final String ID="/{id}";
     public static final String UPLOAD_IMAGES="/{id}/upload-images";
+    public static final String PREMIUM="premium";
 
 }
